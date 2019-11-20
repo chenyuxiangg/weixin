@@ -6,7 +6,7 @@ using namespace std;
 using namespace sql;
 
 class Pool;
-typedef shared_ptr<Pool> SA;
+typedef Pool* SA;
 
 class ConnEntity{
 	public:
@@ -38,7 +38,10 @@ class Pool{
 
 	public:
 		static SA GetInstance() {
-			return SA(m_instance);
+			if (m_instance == NULL) {
+				m_instance = new Pool();
+			}
+			return m_instance;
 		}
 		~Pool() {
 			cout << "Pool deconstruct." << endl;
@@ -53,12 +56,18 @@ class Pool{
 		}
 
 	private:
-		static Pool* m_instance;
+		static SA m_instance;
 		vector<unique_ptr<ConnEntity>> m_arr;
 };
 
-Pool* Pool::m_instance = new Pool();
+class Adapta{
+	public:
+		static shared_ptr<Pool> GetInstance() {
+			return shared_ptr<Pool>(Pool::GetInstance());
+		}
+};
 
+SA Pool::m_instance = NULL;
 /*shared_ptr<Pool> test(SA p) {
 	shared_ptr<Pool> tmp;
 	tmp.reset(p);
@@ -67,6 +76,6 @@ Pool* Pool::m_instance = new Pool();
 
 int main(int argc,char* argv[])
 {
-	SA p = Pool::GetInstance();
+	shared_ptr<Pool> p = Adapta::GetInstance();
 	return 0;
 }
